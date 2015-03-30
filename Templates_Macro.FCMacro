@@ -1,0 +1,103 @@
+# -*- coding: utf-8 -*-
+# Select Povray Template Macro
+# Author: Gomez Lucio
+
+import FreeCAD, FreeCADGui
+import RaytracingGui
+import PySide
+from PySide import QtGui, QtCore
+from PySide.QtGui import *
+
+macroPath = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Macro").GetString("MacroPath") 
+
+class RenderTemplate(QtGui.QWidget):
+    def __init__(self):
+        super(RenderTemplate, self).__init__()
+        self.initUI()
+    def initUI(self):
+        # Title:
+        self.title = QtGui.QLabel("<b>Select Raytracing Template:<b>",self)
+        self.title.show()
+        self.title.setAlignment(QtCore.Qt.AlignCenter)
+        # SelectTemplate:
+        self.combo = QtGui.QComboBox(self)
+        text_file = open(macroPath + "/Macro_Templates/Pov_Templates_List.txt", "r")
+        with text_file as f:
+            lista = [line.strip() for line in f]
+        self.list = lista
+        self.combo.addItems(self.list)
+        self.combo.setCurrentIndex(0)
+        self.combo.activated[str].connect(self.Template_Image)
+        self.combo.activated[str].connect(self.Comment_Template)
+        text_file.close()
+        # Image Template:
+        s = '<>'
+        self.label = QLabel(s, self)
+        self.label.setGeometry(0, 0, 320, 240)
+        file = macroPath + "/Macro_Templates/Images/" + self.combo.currentText() + '.png'
+        image = QPixmap(file)
+        self.label.setPixmap(image)
+        # Comments Template:
+        com_file = open(macroPath + "/Macro_Templates/Pov_Comments/" + self.combo.currentText() + ".txt", "r")
+        self.comlabel =  QtGui.QLabel(self)
+        self.comlabel.setText(com_file.read())
+        self.comlabel.setGeometry(0, 0, 160, 120)
+        # Ok buttons:
+        self.okbox = QtGui.QDialogButtonBox(self)
+        self.okbox.setOrientation(QtCore.Qt.Horizontal)
+        self.okbox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+
+        # Layout:
+        layout = QtGui.QGridLayout()
+        layout.addWidget(self.title, 1, 0, )
+        layout.addWidget(self.combo, 2, 0)
+        layout.addWidget(self.label, 3, 0)
+        layout.addWidget(self.comlabel, 4, 0)
+        layout.addWidget(self.okbox, 5, 0)
+        self.setLayout(layout)
+
+        # Connectors:
+        QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("accepted()"), self.proceed)
+        QtCore.QObject.connect(self.okbox, QtCore.SIGNAL("rejected()"), self.cancel)
+
+
+    def proceed(self):
+       try:
+          s = Gui.Selection.getSelectionEx()
+          Pov_Project = s[0].Object.Name
+          Active_Doc = App.ActiveDocument.Name
+          Name_Template =self.combo.currentText()
+          Template = macroPath + "/Macro_Templates/Pov_Templates/" + Name_Template + '.pov'
+          FreeCAD.getDocument(Active_Doc).getObject(Pov_Project).Template = Template
+          self.close()
+          d.close()
+          App.ActiveDocument.recompute()
+       except:
+           FreeCAD.Console.PrintError('Error!!, Select a Povray Project')
+
+    def cancel(self):
+       self.close()
+       d.close()
+
+    def Template_Image(self):
+          Name_Template =self.combo.currentText()
+          try:
+             file = macroPath + "/Macro_Templates/Images/" + Name_Template + '.png'
+          except:
+             file = macroPath + "/Macro_Templates/Images/No_Image.png"
+          image = QPixmap(file)
+          self.label.setPixmap(image)
+
+    def Comment_Template(self):
+          try:
+             com_file = open(macroPath + "/Macro_Templates/Pov_Comments/" + self.combo.currentText() + ".txt", "r")
+          except:
+             com_file = open(macroPath + "/Macro_Templates/Pov_Comments/None_Comment.txt", "r")
+          self.comlabel.setText(com_file.read())
+
+
+mw = FreeCADGui.getMainWindow()
+d = QtGui.QDockWidget()
+d.setWidget(RenderTemplate())
+mw.addDockWidget(QtCore. Qt.RightDockWidgetArea,d)
+
