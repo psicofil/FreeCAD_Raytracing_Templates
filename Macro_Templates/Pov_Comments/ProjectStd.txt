@@ -1,0 +1,3 @@
+Default Template
+Created by: ...
+Contains a x-y plane with mirage
