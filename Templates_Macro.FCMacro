@@ -16,29 +16,34 @@ class RenderTemplate(QtGui.QWidget):
         self.initUI()
     def initUI(self):
         # Title:
-        self.title = QtGui.QLabel("<b>Select Raytracing Template:<b>",self)
-        self.title.show()
-        self.title.setAlignment(QtCore.Qt.AlignCenter)
+        self.l_title = QtGui.QLabel("<b>Select Raytracing Template:<b>",self)
+        self.l_title.show()
+        self.l_title.setAlignment(QtCore.Qt.AlignCenter)
+        # Select Render
+        self.l_renders = QtGui.QLabel("Select Render ", self)
+        self.cmb_render = QtGui.QComboBox(self)
+        self.cmb_render.addItems(["Povray"])
         # SelectTemplate:
-        self.combo = QtGui.QComboBox(self)
-        text_file = open(macroPath + "/Macro_Templates/Pov_Templates_List.txt", "r")
-        with text_file as f:
+        self.l_template = QtGui.QLabel("Select Template ", self)
+        self.cmb_templates = QtGui.QComboBox(self)
+        List_txt_file = open(macroPath + "/Macro_Templates/Pov_Templates_List.txt", "r")
+        with List_txt_file as f:
             lista = [line.strip() for line in f]
         self.list = lista
-        self.combo.addItems(self.list)
-        self.combo.setCurrentIndex(0)
-        self.combo.activated[str].connect(self.Template_Image)
-        self.combo.activated[str].connect(self.Comment_Template)
-        text_file.close()
-        # Image Template:
+        self.cmb_templates.addItems(self.list)
+        self.cmb_templates.setCurrentIndex(0)
+        self.cmb_templates.activated[str].connect(self.Template_preview)
+        self.cmb_templates.activated[str].connect(self.Template_Comments)
+        List_txt_file.close()
+        # Preview Template:
         s = '<>'
         self.label = QLabel(s, self)
         self.label.setGeometry(0, 0, 320, 240)
-        file = macroPath + "/Macro_Templates/Images/" + self.combo.currentText() + '.png'
+        file = macroPath + "/Macro_Templates/Images/" + self.cmb_templates.currentText() + '.png'
         image = QPixmap(file)
         self.label.setPixmap(image)
         # Comments Template:
-        com_file = open(macroPath + "/Macro_Templates/Pov_Comments/" + self.combo.currentText() + ".txt", "r")
+        com_file = open(macroPath + "/Macro_Templates/Pov_Comments/" + self.cmb_templates.currentText() + ".txt", "r")
         self.comlabel =  QtGui.QLabel(self)
         self.comlabel.setText(com_file.read())
         self.comlabel.setGeometry(0, 0, 160, 120)
@@ -49,11 +54,14 @@ class RenderTemplate(QtGui.QWidget):
 
         # Layout:
         layout = QtGui.QGridLayout()
-        layout.addWidget(self.title, 1, 0, )
-        layout.addWidget(self.combo, 2, 0)
-        layout.addWidget(self.label, 3, 0)
-        layout.addWidget(self.comlabel, 4, 0)
-        layout.addWidget(self.okbox, 5, 0)
+        layout.addWidget(self.l_title, 1, 0, )
+        layout.addWidget(self.l_renders, 2, 0, )
+        layout.addWidget(self.cmb_render, 3, 0, )
+        layout.addWidget(self.l_template, 4, 0, )
+        layout.addWidget(self.cmb_templates, 5, 0)
+        layout.addWidget(self.label, 6, 0)
+        layout.addWidget(self.comlabel, 7, 0)
+        layout.addWidget(self.okbox, 8, 0)
         self.setLayout(layout)
 
         # Connectors:
@@ -66,7 +74,7 @@ class RenderTemplate(QtGui.QWidget):
           s = Gui.Selection.getSelectionEx()
           Pov_Project = s[0].Object.Name
           Active_Doc = App.ActiveDocument.Name
-          Name_Template =self.combo.currentText()
+          Name_Template =self.cmb_templates.currentText()
           Template = macroPath + "/Macro_Templates/Pov_Templates/" + Name_Template + '.pov'
           FreeCAD.getDocument(Active_Doc).getObject(Pov_Project).Template = Template
           self.close()
@@ -79,8 +87,8 @@ class RenderTemplate(QtGui.QWidget):
        self.close()
        d.close()
 
-    def Template_Image(self):
-          Name_Template =self.combo.currentText()
+    def Template_preview(self):
+          Name_Template =self.cmb_templates.currentText()
           try:
              file = macroPath + "/Macro_Templates/Images/" + Name_Template + '.png'
           except:
@@ -88,9 +96,9 @@ class RenderTemplate(QtGui.QWidget):
           image = QPixmap(file)
           self.label.setPixmap(image)
 
-    def Comment_Template(self):
+    def Template_Comments(self):
           try:
-             com_file = open(macroPath + "/Macro_Templates/Pov_Comments/" + self.combo.currentText() + ".txt", "r")
+             com_file = open(macroPath + "/Macro_Templates/Pov_Comments/" + self.cmb_templates.currentText() + ".txt", "r")
           except:
              com_file = open(macroPath + "/Macro_Templates/Pov_Comments/None_Comment.txt", "r")
           self.comlabel.setText(com_file.read())
